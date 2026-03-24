@@ -1,16 +1,16 @@
+import { useChildMessage } from './hooks/useChildMessage'
+import { DynamicsLayout } from './components/DynamicsLayout'
+
 /**
- * Root application component for the Sidecar simulator.
+ * Root application for the Sidecar (Microsoft Dynamics simulator).
  *
- * This simulates an agent desktop (CRM/CCaaS) for local development
- * and testing of the Agent Assist UI widget.
+ * Listens for postMessage from the Agent Assist ui iframe and
+ * renders the mock Dynamics environment with the CTI Developer Panel.
  */
 function App() {
-  return (
-    <div id="sidecar-root">
-      <h1>Agent Desktop Simulator</h1>
-      <p>Sidecar scaffold initialized. Desktop simulation will be implemented here.</p>
-    </div>
-  )
+  const { record } = useChildMessage()
+
+  return <DynamicsLayout record={record} />
 }
 
 export default App

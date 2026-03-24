@@ -1,20 +1,30 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import App from './App'
 
+/* Mock the hooks to isolate rendering */
+vi.mock('./hooks/useChildMessage', () => ({
+  useChildMessage: () => ({ record: null, clearRecord: vi.fn() }),
+}))
+
+/* Mock CtiPanel to avoid socket.io side effects */
+vi.mock('./components/CtiPanel', () => ({
+  CtiPanel: () => <div data-testid="cti-panel">CTI Mock</div>,
+}))
+
 describe('App', () => {
-  it('renders the sidecar root', () => {
+  it('should render the Dynamics layout', () => {
     render(<App />)
-    expect(screen.getByText('Agent Desktop Simulator')).toBeInTheDocument()
+    expect(screen.getByTestId('dynamics-layout')).toBeInTheDocument()
   })
 
-  it('has the correct root element id', () => {
-    const { container } = render(<App />)
-    expect(container.querySelector('#sidecar-root')).toBeInTheDocument()
+  it('should render the Agent Assist iframe', () => {
+    render(<App />)
+    expect(screen.getByTestId('agent-assist-iframe')).toBeInTheDocument()
   })
 
-  it('renders scaffold placeholder text', () => {
+  it('should render the CRM record area', () => {
     render(<App />)
-    expect(screen.getByText(/sidecar scaffold initialized/i)).toBeInTheDocument()
+    expect(screen.getByTestId('crm-record')).toBeInTheDocument()
   })
 })
