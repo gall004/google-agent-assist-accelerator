@@ -1,0 +1,16 @@
+# Ownership rules for monorepo code review
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything
+* @gall004
+
+# Service-specific owners (expand as team grows)
+/services/cloud-pubsub-interceptor/ @gall004
+/services/ui-connector/ @gall004
+/services/ui/ @gall004
+/services/sidecar/ @gall004
+/infra/ @gall004
+
+# CI/CD and governance require explicit review
+/.github/ @gall004
+/.agents/ @gall004

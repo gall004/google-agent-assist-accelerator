@@ -1,0 +1,143 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      interceptor: ${{ steps.filter.outputs.interceptor }}
+      connector: ${{ steps.filter.outputs.connector }}
+      ui: ${{ steps.filter.outputs.ui }}
+      sidecar: ${{ steps.filter.outputs.sidecar }}
+      infra: ${{ steps.filter.outputs.infra }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            interceptor:
+              - 'services/cloud-pubsub-interceptor/**'
+            connector:
+              - 'services/ui-connector/**'
+            ui:
+              - 'services/ui/**'
+            sidecar:
+              - 'services/sidecar/**'
+            infra:
+              - 'infra/**'
+
+  lint-test-interceptor:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.interceptor == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/cloud-pubsub-interceptor
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: pip install ruff pytest pytest-cov
+      - name: Lint
+        run: ruff check .
+      - name: Unit Tests
+        run: pytest tests/unit/ -v --tb=short --cov=. --cov-report=term-missing
+      - name: Docker Build (no push)
+        run: docker build -t interceptor-test .
+
+  lint-test-connector:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.connector == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/ui-connector
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: pip install ruff pytest pytest-cov
+      - name: Lint
+        run: ruff check .
+      - name: Unit Tests
+        run: pytest tests/unit/ -v --tb=short --cov=. --cov-report=term-missing
+      - name: Docker Build (no push)
+        run: docker build -t connector-test .
+
+  lint-test-ui:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.ui == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: services/ui/package-lock.json
+      - run: npm ci
+      - name: Lint
+        run: npx eslint .
+      - name: Type Check
+        run: npx tsc --noEmit
+      - name: Unit Tests
+        run: npx vitest run --coverage
+      - name: Build
+        run: npm run build
+
+  lint-test-sidecar:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.sidecar == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/sidecar
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: services/sidecar/package-lock.json
+      - run: npm ci
+      - name: Lint
+        run: npx eslint .
+      - name: Type Check
+        run: npx tsc --noEmit
+      - name: Unit Tests
+        run: npx vitest run --coverage
+      - name: Build
+        run: npm run build
+
+  validate-terraform:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.infra == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7"
+      - run: terraform init -backend=false
+      - run: terraform validate
+      - run: terraform fmt -check -recursive

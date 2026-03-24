@@ -1,0 +1,92 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  GCP_REGION: us-central1
+  ARTIFACT_REGISTRY: us-central1-docker.pkg.dev
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      interceptor: ${{ steps.filter.outputs.interceptor }}
+      connector: ${{ steps.filter.outputs.connector }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            interceptor:
+              - 'services/cloud-pubsub-interceptor/**'
+            connector:
+              - 'services/ui-connector/**'
+
+  deploy-interceptor:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.interceptor == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Build & Push
+        run: |
+          gcloud builds submit services/cloud-pubsub-interceptor \
+            --tag "${{ env.ARTIFACT_REGISTRY }}/${{ vars.GCP_PROJECT_ID }}/aa-accelerator/cloud-pubsub-interceptor:${{ github.sha }}"
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy cloud-pubsub-interceptor \
+            --image "${{ env.ARTIFACT_REGISTRY }}/${{ vars.GCP_PROJECT_ID }}/aa-accelerator/cloud-pubsub-interceptor:${{ github.sha }}" \
+            --region ${{ env.GCP_REGION }} \
+            --platform managed \
+            --no-allow-unauthenticated
+      - name: Smoke Test
+        run: |
+          URL=$(gcloud run services describe cloud-pubsub-interceptor --region ${{ env.GCP_REGION }} --format 'value(status.url)')
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${URL}/healthz" -H "Authorization: Bearer $(gcloud auth print-identity-token)")
+          if [ "$STATUS" != "200" ]; then echo "Health check failed: $STATUS"; exit 1; fi
+
+  deploy-connector:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.connector == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Build & Push
+        run: |
+          gcloud builds submit services/ui-connector \
+            --tag "${{ env.ARTIFACT_REGISTRY }}/${{ vars.GCP_PROJECT_ID }}/aa-accelerator/ui-connector:${{ github.sha }}"
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ui-connector \
+            --image "${{ env.ARTIFACT_REGISTRY }}/${{ vars.GCP_PROJECT_ID }}/aa-accelerator/ui-connector:${{ github.sha }}" \
+            --region ${{ env.GCP_REGION }} \
+            --platform managed \
+            --allow-unauthenticated
+      - name: Smoke Test
+        run: |
+          URL=$(gcloud run services describe ui-connector --region ${{ env.GCP_REGION }} --format 'value(status.url)')
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${URL}/healthz")
+          if [ "$STATUS" != "200" ]; then echo "Health check failed: $STATUS"; exit 1; fi
