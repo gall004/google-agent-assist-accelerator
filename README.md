@@ -40,7 +40,7 @@ An enterprise-grade, production-ready integration layer for [Google Agent Assist
 ## Prerequisites
 
 - [Python 3.12+](https://www.python.org/downloads/)
-- [Node.js 20+](https://nodejs.org/)
+- [Node.js 22+](https://nodejs.org/) (LTS)
 - [Docker](https://docs.docker.com/get-docker/)
 - [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
 - [Terraform 1.7+](https://developer.hashicorp.com/terraform/downloads)
