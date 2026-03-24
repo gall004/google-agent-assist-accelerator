@@ -72,11 +72,15 @@ See `.env.example` for the complete list with descriptions.
 ## Local Development
 
 ```bash
-# Start Redis cache (Docker — simulates Cloud Memorystore)
-docker compose up -d redis
+# One-time setup
+cp .env.example .env
+npm install
 
-# Run services individually for hot-reloading (see docs/local-development.md)
+# Start all services (Redis + connector + ui + sidecar)
+npm run dev
 ```
+
+See [docs/local-development.md](docs/local-development.md) for the full setup guide.
 ## Deployment
 
 Services are deployed to **Google Cloud Run** via GitHub Actions:

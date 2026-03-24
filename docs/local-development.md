@@ -7,69 +7,56 @@
 - [Node.js 22+](https://nodejs.org/) (LTS)
 - [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) (for integration tests)
 
-## Step 1: Environment Setup
+## One-Time Setup
 
 ```bash
-# Clone and configure
+# 1. Clone and configure
 git clone https://github.com/gall004/google-agent-assist-accelerator.git
 cd google-agent-assist-accelerator
 cp .env.example .env
+
+# 2. Install root dev dependencies (concurrently)
+npm install
+
+# 3. Install service dependencies
+cd services/ui && npm install && cd ../..
+cd services/sidecar && npm install && cd ../..
+
+# 4. Set up the Python backend
+cd services/ui-connector
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cd ../..
 ```
 
 Edit `.env` with your values. For a local-only test of the CTI → Soft Pop flow, the defaults work as-is. Set `AUTH_OPTION=Skip` to bypass JWT authentication.
 
-## Step 2: Start Redis
-
-Redis runs via Docker Compose, simulating the Google Cloud Memorystore boundary used in production.
+## Start Everything (Single Command)
 
 ```bash
-docker compose up -d redis
-```
-
-Verify it's healthy:
-
-```bash
-docker compose ps
-# Should show redis service as "healthy"
-```
-
-> **Note:** Redis data persists in a Docker volume (`redis-data`). Run `docker compose down -v` to clear it.
-
-## Step 3: Start the UI Connector (Terminal 1)
-
-```bash
-cd services/ui-connector
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-
-# Load env vars from root
-export $(grep -v '^#' ../../.env | xargs)
-python main.py
-```
-
-Runs on **http://localhost:8080**. You should see: `Redis Pub/Sub listener started`.
-
-## Step 4: Start the UI Service (Terminal 2)
-
-```bash
-cd services/ui
-npm install
 npm run dev
 ```
 
-Runs on **http://localhost:5173**. The Active Call Bar shows a green "Connected" dot once the ui-connector is reachable.
+This starts all four services in one terminal with color-coded output:
 
-## Step 5: Start the Sidecar Simulator (Terminal 3)
+| Prefix | Service | Port | Hot Reload |
+|---|---|---|---|
+| `redis` | Redis (Docker) | 6379 | N/A |
+| `connector` | UI Connector (Python) | 8080 | No (restart manually) |
+| `ui` | Agent Assist Widget (Vite) | 5173 | ✅ Yes |
+| `sidecar` | Dynamics CRM Simulator (Vite) | 5174 | ✅ Yes |
+
+> **Note:** The ui-connector requires an activated `.venv` in your shell before running `npm run dev`. If you get import errors, run `source services/ui-connector/.venv/bin/activate` first.
+
+## Stop Everything
 
 ```bash
-cd services/sidecar
-npm install
-npm run dev
+# Ctrl+C to stop all services, then:
+npm run dev:stop     # stops the Redis container
+npm run dev:reset    # stops Redis AND clears persisted data
 ```
 
-Runs on **http://localhost:5174**. This is your main testing surface.
-
-## Step 6: Test the End-to-End Flow
+## Test the End-to-End Flow
 
 1. Open **http://localhost:5174** in your browser
 2. You'll see the mock Dynamics 365 layout with:
@@ -103,12 +90,22 @@ cd services/ui && npx vitest run
 cd services/sidecar && npx vitest run
 ```
 
-## Stopping Services
+## Running Services Individually
+
+If you prefer separate terminals (e.g., to isolate logs):
 
 ```bash
-# Stop Redis
-docker compose down
+# Terminal 1: Redis
+docker compose up -d redis
 
-# Stop Redis and clear data
-docker compose down -v
+# Terminal 2: UI Connector
+cd services/ui-connector && source .venv/bin/activate
+export $(grep -v '^#' ../../.env | xargs)
+python main.py
+
+# Terminal 3: UI
+cd services/ui && npm run dev
+
+# Terminal 4: Sidecar
+cd services/sidecar && npm run dev
 ```
