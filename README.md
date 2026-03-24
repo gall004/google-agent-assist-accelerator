@@ -40,7 +40,7 @@ An enterprise-grade, production-ready integration layer for [Google Agent Assist
 ## Prerequisites
 
 - [Python 3.12+](https://www.python.org/downloads/)
-- [Node.js 20+](https://nodejs.org/)
+- [Node.js 22+](https://nodejs.org/) (LTS)
 - [Docker](https://docs.docker.com/get-docker/)
 - [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
 - [Terraform 1.7+](https://developer.hashicorp.com/terraform/downloads)
@@ -59,9 +59,12 @@ cp .env.example .env
 | `GCP_PROJECT_ID` | All | Your GCP project ID |
 | `GCP_REGION` | All | GCP region (default: `us-central1`) |
 | `REDIS_HOST` | Interceptor, Connector | Redis/Memorystore host |
+| `REDIS_PORT` | Interceptor, Connector | Redis port (default: `6379`) |
 | `JWT_SECRET_KEY` | Connector | JWT signing key (Secret Manager in prod) |
 | `ALLOWED_ORIGINS` | Connector | Comma-separated CORS origins |
-| `CONVERSATION_PROFILE` | Connector | Dialogflow conversation profile path |
+| `AUTH_OPTION` | Connector | Auth provider: `Salesforce`, `GenesysCloud`, `Twilio`, `Skip` |
+| `SUBSCRIPTION_*` | Interceptor | Pub/Sub subscription IDs (4 event types) |
+| `LOG_LEVEL` | All | Logging level (default: `INFO`) |
 | `VITE_UI_CONNECTOR_URL` | UI | URL of the UI Connector service |
 
 See `.env.example` for the complete list with descriptions.
@@ -69,12 +72,15 @@ See `.env.example` for the complete list with descriptions.
 ## Local Development
 
 ```bash
-# Start all services
-docker compose up --build
+# One-time setup
+cp .env.example .env
+npm install
 
-# Or run individual services (see docs/local-development.md)
+# Start all services (Redis + connector + ui + sidecar)
+npm run dev
 ```
 
+See [docs/local-development.md](docs/local-development.md) for the full setup guide.
 ## Deployment
 
 Services are deployed to **Google Cloud Run** via GitHub Actions:

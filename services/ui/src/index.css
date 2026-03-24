@@ -1,0 +1,215 @@
+:root {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #213547;
+  background-color: #ffffff;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Agent Assist App Layout                                             */
+/* ------------------------------------------------------------------ */
+
+.agent-assist-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.agent-assist-app__container {
+  flex: 1;
+  overflow: auto;
+}
+
+.aa-container {
+  height: 100%;
+  width: 100%;
+}
+
+/* ------------------------------------------------------------------ */
+/* Active Call Bar                                                      */
+/* ------------------------------------------------------------------ */
+
+.active-call-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  font-size: 0.8125rem;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+.active-call-bar__status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot--connected {
+  background: #4caf50;
+  box-shadow: 0 0 4px #4caf50;
+}
+
+.status-dot--disconnected {
+  background: #f44336;
+  box-shadow: 0 0 4px #f44336;
+}
+
+.active-call-bar__info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.active-call-bar__caller {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.active-call-bar__intent {
+  color: #90caf9;
+}
+
+.active-call-bar__call-status {
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.active-call-bar__call-status--ringing {
+  background: #ff9800;
+  color: #1a1a2e;
+}
+
+.active-call-bar__call-status--connected {
+  background: #4caf50;
+  color: #ffffff;
+}
+
+.active-call-bar__call-status--ended {
+  background: #616161;
+  color: #ffffff;
+}
+
+.active-call-bar__idle {
+  color: #757575;
+  font-style: italic;
+}
+
+/* ------------------------------------------------------------------ */
+/* Soft Pop Notification                                                */
+/* ------------------------------------------------------------------ */
+
+.soft-pop {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 340px;
+  padding: 1rem;
+  background: linear-gradient(135deg, #1e3a5f, #1a1a2e);
+  color: #ffffff;
+  border: 1px solid rgba(144, 202, 249, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  z-index: 9999;
+  animation: soft-pop-slide-in 0.3s ease-out;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.soft-pop:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.soft-pop__icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  animation: soft-pop-ring 1.5s ease-in-out infinite;
+}
+
+.soft-pop__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.soft-pop__title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #90caf9;
+  margin-bottom: 0.25rem;
+}
+
+.soft-pop__message {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  margin-bottom: 0.25rem;
+}
+
+.soft-pop__cta {
+  font-size: 0.75rem;
+  color: #64b5f6;
+}
+
+.soft-pop__close {
+  background: none;
+  border: none;
+  color: #90caf9;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.soft-pop__close:hover {
+  opacity: 1;
+}
+
+@keyframes soft-pop-slide-in {
+  from {
+    transform: translateX(100%) translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes soft-pop-ring {
+  0%, 100% { transform: rotate(0deg); }
+  10% { transform: rotate(15deg); }
+  20% { transform: rotate(-10deg); }
+  30% { transform: rotate(5deg); }
+  40% { transform: rotate(0deg); }
+}
