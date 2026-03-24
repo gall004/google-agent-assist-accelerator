@@ -59,9 +59,12 @@ cp .env.example .env
 | `GCP_PROJECT_ID` | All | Your GCP project ID |
 | `GCP_REGION` | All | GCP region (default: `us-central1`) |
 | `REDIS_HOST` | Interceptor, Connector | Redis/Memorystore host |
+| `REDIS_PORT` | Interceptor, Connector | Redis port (default: `6379`) |
 | `JWT_SECRET_KEY` | Connector | JWT signing key (Secret Manager in prod) |
 | `ALLOWED_ORIGINS` | Connector | Comma-separated CORS origins |
-| `CONVERSATION_PROFILE` | Connector | Dialogflow conversation profile path |
+| `AUTH_OPTION` | Connector | Auth provider: `Salesforce`, `GenesysCloud`, `Twilio`, `Skip` |
+| `SUBSCRIPTION_*` | Interceptor | Pub/Sub subscription IDs (4 event types) |
+| `LOG_LEVEL` | All | Logging level (default: `INFO`) |
 | `VITE_UI_CONNECTOR_URL` | UI | URL of the UI Connector service |
 
 See `.env.example` for the complete list with descriptions.
