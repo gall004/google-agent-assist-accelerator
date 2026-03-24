@@ -1,0 +1,14 @@
+{
+  "name": "google-agent-assist-accelerator",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Enterprise integration layer for Google Agent Assist",
+  "scripts": {
+    "dev": "docker compose up -d redis && concurrently -n redis,connector,ui,sidecar -c blue,yellow,green,magenta \"docker compose logs -f redis\" \"cd services/ui-connector && source .venv/bin/activate && python main.py\" \"cd services/ui && npm run dev\" \"cd services/sidecar && npm run dev\"",
+    "dev:stop": "docker compose down",
+    "dev:reset": "docker compose down -v"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
