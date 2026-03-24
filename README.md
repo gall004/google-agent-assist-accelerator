@@ -72,12 +72,11 @@ See `.env.example` for the complete list with descriptions.
 ## Local Development
 
 ```bash
-# Start all services
-docker compose up --build
+# Start Redis cache (Docker — simulates Cloud Memorystore)
+docker compose up -d redis
 
-# Or run individual services (see docs/local-development.md)
+# Run services individually for hot-reloading (see docs/local-development.md)
 ```
-
 ## Deployment
 
 Services are deployed to **Google Cloud Run** via GitHub Actions:
